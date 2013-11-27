@@ -75,37 +75,41 @@ void storeCode(decode_results *results)
     }
     else
     {
-        if (codeType == NEC)
-        {
-            Serial.print("Received NEC: ");
-            if (results->value == REPEAT)
-            {
-                // Don't record a NEC repeat value as that's useless.
-                Serial.println("repeat; ignoring.");
-                return;
-            }
-        }
-        else if (codeType == SONY)
-        {
-            Serial.print("Received SONY: ");
-        }
-        else if (codeType == RC5)
-        {
-            Serial.print("Received RC5: ");
-        }
-        else if (codeType == RC6)
-        {
-            Serial.print("Received RC6: ");
-        }
-        else
-        {
-            Serial.print("Unexpected codeType ");
-            Serial.print(codeType, DEC);
-            Serial.println("");
-        }
+        VerifyTypeOfSignal(codeType);
         Serial.println(results->value, HEX);
         codeValue = results->value;
         codeLen = results->bits;
+    }
+}
+void VerifyTypeOfSignal(int codeType)
+{
+    if (codeType == NEC)
+    {
+        Serial.print("Received NEC: ");
+        if (results->value == REPEAT)
+        {
+            // Don't record a NEC repeat value as that's useless.
+            Serial.println("repeat; ignoring.");
+            return;
+        }
+    }
+    else if (codeType == SONY)
+    {
+        Serial.print("Received SONY: ");
+    }
+    else if (codeType == RC5)
+    {
+        Serial.print("Received RC5: ");
+    }
+    else if (codeType == RC6)
+    {
+        Serial.print("Received RC6: ");
+    }
+    else
+    {
+        Serial.print("Unexpected codeType ");
+        Serial.print(codeType, DEC);
+        Serial.println("");
     }
 }
 
@@ -113,53 +117,72 @@ void sendCode(int repeat)
 {
     if (codeType == NEC)
     {
-        if (repeat)
-        {
-            irsend.sendNEC(REPEAT, codeLen);
-            Serial.println("Sent NEC repeat");
-        }
-        else
-        {
-            irsend.sendNEC(codeValue, codeLen);
-            Serial.print("Sent NEC ");
-            Serial.println(codeValue, HEX);
-        }
+        sendCodeNec();
     }
     else if (codeType == SONY)
     {
-        irsend.sendSony(codeValue, codeLen);
-        Serial.print("Sent Sony ");
-        Serial.println(codeValue, HEX);
+        sendCodeSony();
     }
     else if (codeType == RC5 || codeType == RC6)
     {
-        if (!repeat)
-        {
-            // Flip the toggle bit for a new button press
-            toggle = 1 - toggle;
-        }
-        // Put the toggle bit into the code to send
-        codeValue = codeValue & ~(1 << (codeLen - 1));
-        codeValue = codeValue | (toggle << (codeLen - 1));
-        if (codeType == RC5)
-        {
-            Serial.print("Sent RC5 ");
-            Serial.println(codeValue, HEX);
-            irsend.sendRC5(codeValue, codeLen);
-        }
-        else
-        {
-            irsend.sendRC6(codeValue, codeLen);
-            Serial.print("Sent RC6 ");
-            Serial.println(codeValue, HEX);
-        }
+        sendCodeRC5orRC6(repeat);
     }
     else if (codeType == UNKNOWN /* i.e. raw */)
     {
         // Assume 38 KHz
-        irsend.sendRaw(rawCodes, codeLen, 38);
-        Serial.println("Sent raw");
+        sendCodeUnknow();
     }
+}
+void sendCodeNec()
+{
+
+    if (repeat)
+    {
+        irsend.sendNEC(REPEAT, codeLen);
+        Serial.println("Sent NEC repeat");
+    }
+    else
+    {
+        irsend.sendNEC(codeValue, codeLen);
+        Serial.print("Sent NEC ");
+        Serial.println(codeValue, HEX);
+    }
+
+}
+void sendCodeSony()
+{
+    irsend.sendSony(codeValue, codeLen);
+    Serial.print("Sent Sony ");
+    Serial.println(codeValue, HEX);
+}
+void sendCodeRC5orRC6(int repeat)
+{
+    if (!repeat)
+    {
+        // Flip the toggle bit for a new button press
+        toggle = 1 - toggle;
+    }
+    // Put the toggle bit into the code to send
+    codeValue = codeValue & ~(1 << (codeLen - 1));
+    codeValue = codeValue | (toggle << (codeLen - 1));
+    if (codeType == RC5)
+    {
+        Serial.print("Sent RC5 ");
+        Serial.println(codeValue, HEX);
+        irsend.sendRC5(codeValue, codeLen);
+    }
+    else
+    {
+        irsend.sendRC6(codeValue, codeLen);
+        Serial.print("Sent RC6 ");
+        Serial.println(codeValue, HEX);
+    }
+}
+
+void sendCodeUnknow()
+{
+    irsend.sendRaw(rawCodes, codeLen, 38);
+    Serial.println("Sent raw");
 }
 
 int lastButtonState;
