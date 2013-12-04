@@ -18,7 +18,11 @@
 #include <IRremote.h>
 
 int RECV_PIN = 11;
-int BUTTON_PIN = 2;
+int FIRST_BUTTON_PIN = 2;
+//================================================================================================================================
+int SECOND_BUTTON_PIN = 3; //@Lanchinho : nao necessariamente neste pino/ casa, pode ser qlqer outra que esteja livre
+int THIRD_BUTTON_PIN = 4;  //@Lanchinho: Vou deixar todas as cagadas, digo alterações feitas por mim separadas por um "========="
+//================================================================================================================================
 int STATUS_PIN = 13;
 
 IRrecv irrecv(RECV_PIN);
@@ -30,7 +34,9 @@ void setup()
 {
     Serial.begin(9600);
     irrecv.enableIRIn(); // Start the receiver
-    pinMode(BUTTON_PIN, INPUT);
+    pinMode(FIRST_BUTTON_PIN, INPUT);
+    pinMode(SECOND_BUTTON_PIN, INPUT);
+    pinMode(THIRD_BUTTON_PIN, INPUT);
     pinMode(STATUS_PIN, OUTPUT);
 }
 
@@ -185,23 +191,35 @@ void sendCodeUnknow()
     Serial.println("Sent raw");
 }
 
-int lastButtonState;
+int lastButtonState; //@Lanchinho, seria isto aqui o ultimo estado do btn 1 ?
+
+
+//============================================================
+int lastBtnStateOfBtn2;
+int lastBtnStateOfBtn3;
+//============================================================
 
 void loop()
 {
     // If button pressed, send the code.
-    int buttonState = digitalRead(BUTTON_PIN);
-    if (lastButtonState == HIGH && buttonState == LOW)
+    int firstButtonState = digitalRead(FIRST_BUTTON_PIN);
+    
+    //========================================================
+    int secondButtonState = digitalRead(SECOND_BUTTON_PIN);
+    int thirdButtonState = digitalRead(THIRD_BUTTON_PIN);
+    //========================================================
+    
+    if (lastButtonState == HIGH && firstButtonState == LOW)
     {
         Serial.println("Released");
         irrecv.enableIRIn(); // Re-enable receiver
     }
 
-    if (buttonState)
+    if (firstButtonState)
     {
         Serial.println("Pressed, sending");
         digitalWrite(STATUS_PIN, HIGH);
-        sendCode(lastButtonState == buttonState);
+        sendCode(lastButtonState == firstButtonState);
         digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
@@ -212,5 +230,61 @@ void loop()
         irrecv.resume(); // resume receiver
         digitalWrite(STATUS_PIN, LOW);
     }
-    lastButtonState = buttonState;
+    lastButtonState = firstButtonState;
+    
+//==========================================================================
+//Btn2
+    if (lastBtnStateOfBtn2 == HIGH && secondButtonState == LOW)
+    {
+        Serial.println("Released");
+        irrecv.enableIRIn(); // Re-enable receiver
+    }
+
+    if (secondButtonState)
+    {
+        Serial.println("Pressed, sending");
+        digitalWrite(STATUS_PIN, HIGH);
+        sendCode(lastBtnStateOfBtn2 == secondButtonState);
+        digitalWrite(STATUS_PIN, LOW);
+        delay(50); // Wait a bit between retransmissions
+    }
+    else if (irrecv.decode(&results))
+    {
+        digitalWrite(STATUS_PIN, HIGH);
+        storeCode(&results);
+        irrecv.resume(); // resume receiver
+        digitalWrite(STATUS_PIN, LOW);
+    }
+    lastBtnStateOfBtn2 = lastBtnStateOfBtn2;
+    
+    //Btn 3 
+    if (lastBtnStateOfBtn3 == HIGH && thirdButtonState == LOW)
+    {
+        Serial.println("Released");
+        irrecv.enableIRIn(); // Re-enable receiver
+    }
+
+    if (thirdButtonState)
+    {
+        Serial.println("Pressed, sending");
+        digitalWrite(STATUS_PIN, HIGH);
+        sendCode(lastBtnStateOfBtn3 == thirdButtonState);
+        digitalWrite(STATUS_PIN, LOW);
+        delay(50); // Wait a bit between retransmissions
+    }
+    else if (irrecv.decode(&results))
+    {
+        digitalWrite(STATUS_PIN, HIGH);
+        storeCode(&results);
+        irrecv.resume(); // resume receiver
+        digitalWrite(STATUS_PIN, LOW);
+    }
+    lastBtnStateOfBtn3 = thirdButtonState;
+//===========================================================    
+    
+    
+    
+    
+    
+    
 }

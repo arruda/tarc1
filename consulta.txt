@@ -1,0 +1,7 @@
+Galera, vejam se isso aqui server de alguma coisa para a gente
+
+http://arduino.cc/en/Tutorial/EEPROMWrite
+
+http://babuino.info/post/45239830057/gravar-dados-na-eeprom-do-arduino-dados-de-ate-16-e-32
+
+http://www.mosaic-industries.com/embedded-systems/sbc-single-board-computers/freescale-hcs12-9s12-c-language/instrument-control/paged-ram-flash-nonvolatile
