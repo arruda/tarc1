@@ -191,6 +191,8 @@ void sendCodeUnknow()
     Serial.println("Sent raw");
 }
 
+
+
 int lastButtonState; //@Lanchinho, seria isto aqui o ultimo estado do btn 1 ?
 
 
