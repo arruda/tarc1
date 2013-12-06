@@ -117,7 +117,7 @@ void sendCode(int repeat)
 {
     if (codeType == NEC)
     {
-        sendCodeNec();
+        sendCodeNec(repeat);
     }
     else if (codeType == SONY)
     {
@@ -133,7 +133,7 @@ void sendCode(int repeat)
         sendCodeUnknow();
     }
 }
-void sendCodeNec()
+void sendCodeNec(int repeat)
 {
 
     if (repeat)
