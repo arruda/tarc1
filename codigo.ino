@@ -167,7 +167,7 @@ void sendCode(int repeat, int pressed_button)
 }
 void sendCodeNec(int repeat, int pressed_button)
 {
-
+    printDadosBotao(pressed_button);
     if (repeat)
     {
         irsend.sendNEC(REPEAT, buttons_list[pressed_button].codeLen);
