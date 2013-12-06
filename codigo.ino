@@ -230,7 +230,7 @@ void loop()
     {
         Serial.println("Pressed, sending");
         digitalWrite(STATUS_PIN, HIGH);
-        // sendCode(lastButtonState == firstButtonState);
+        sendCode(lastButtonState == firstButtonState);
         digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
