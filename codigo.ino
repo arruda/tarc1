@@ -20,23 +20,32 @@
 int RECV_PIN = 11;
 int FIRST_BUTTON_PIN = 2;
 //================================================================================================================================
-int SECOND_BUTTON_PIN = 3; //@Lanchinho : nao necessariamente neste pino/ casa, pode ser qlqer outra que esteja livre
-int THIRD_BUTTON_PIN = 4;  //@Lanchinho: Vou deixar todas as cagadas, digo alterações feitas por mim separadas por um "========="
+// int SECOND_BUTTON_PIN = 3; //@Lanchinho : nao necessariamente neste pino/ casa, pode ser qlqer outra que esteja livre
+// int THIRD_BUTTON_PIN = 4;  //@Lanchinho: Vou deixar todas as cagadas, digo alterações feitas por mim separadas por um "========="
 //================================================================================================================================
 int STATUS_PIN = 13;
 
 IRrecv irrecv(RECV_PIN);
-IRsend irsend;
+IRsend irsend; //lembrar de por PWM 3 como o IR LED
 
 decode_results results;
+
+//=====================
+//VARIAVEIS GLOBAIS
+//=====================
+int ultimo_botao_press = FIRST_BUTTON_PIN; //por default o ultimo botao pressionado vai ser o primeiro
+//=====================
+//VARIAVEIS GLOBAIS - FIM
+//=====================
+
 
 void setup()
 {
     Serial.begin(9600);
     irrecv.enableIRIn(); // Start the receiver
     pinMode(FIRST_BUTTON_PIN, INPUT);
-    pinMode(SECOND_BUTTON_PIN, INPUT);
-    pinMode(THIRD_BUTTON_PIN, INPUT);
+    // pinMode(SECOND_BUTTON_PIN, INPUT);
+    // pinMode(THIRD_BUTTON_PIN, INPUT);
     pinMode(STATUS_PIN, OUTPUT);
 }
 
@@ -205,12 +214,12 @@ void loop()
 {
     // If button pressed, send the code.
     int firstButtonState = digitalRead(FIRST_BUTTON_PIN);
-    
+
     //========================================================
-    int secondButtonState = digitalRead(SECOND_BUTTON_PIN);
-    int thirdButtonState = digitalRead(THIRD_BUTTON_PIN);
+    // int secondButtonState = digitalRead(SECOND_BUTTON_PIN);
+    // int thirdButtonState = digitalRead(THIRD_BUTTON_PIN);
     //========================================================
-    
+
     if (lastButtonState == HIGH && firstButtonState == LOW)
     {
         Serial.println("Released");
@@ -233,60 +242,60 @@ void loop()
         digitalWrite(STATUS_PIN, LOW);
     }
     lastButtonState = firstButtonState;
-    
+
 //==========================================================================
 //Btn2
-    if (lastBtnStateOfBtn2 == HIGH && secondButtonState == LOW)
-    {
-        Serial.println("Released");
-        irrecv.enableIRIn(); // Re-enable receiver
-    }
+    // if (lastBtnStateOfBtn2 == HIGH && secondButtonState == LOW)
+    // {
+    //     Serial.println("Released");
+    //     irrecv.enableIRIn(); // Re-enable receiver
+    // }
 
-    if (secondButtonState)
-    {
-        Serial.println("Pressed, sending");
-        digitalWrite(STATUS_PIN, HIGH);
-        sendCode(lastBtnStateOfBtn2 == secondButtonState);
-        digitalWrite(STATUS_PIN, LOW);
-        delay(50); // Wait a bit between retransmissions
-    }
-    else if (irrecv.decode(&results))
-    {
-        digitalWrite(STATUS_PIN, HIGH);
-        storeCode(&results);
-        irrecv.resume(); // resume receiver
-        digitalWrite(STATUS_PIN, LOW);
-    }
-    lastBtnStateOfBtn2 = lastBtnStateOfBtn2;
-    
-    //Btn 3 
-    if (lastBtnStateOfBtn3 == HIGH && thirdButtonState == LOW)
-    {
-        Serial.println("Released");
-        irrecv.enableIRIn(); // Re-enable receiver
-    }
+    // if (secondButtonState)
+    // {
+    //     Serial.println("Pressed, sending");
+    //     digitalWrite(STATUS_PIN, HIGH);
+    //     sendCode(lastBtnStateOfBtn2 == secondButtonState);
+    //     digitalWrite(STATUS_PIN, LOW);
+    //     delay(50); // Wait a bit between retransmissions
+    // }
+    // else if (irrecv.decode(&results))
+    // {
+    //     digitalWrite(STATUS_PIN, HIGH);
+    //     storeCode(&results);
+    //     irrecv.resume(); // resume receiver
+    //     digitalWrite(STATUS_PIN, LOW);
+    // }
+    // lastBtnStateOfBtn2 = lastBtnStateOfBtn2;
 
-    if (thirdButtonState)
-    {
-        Serial.println("Pressed, sending");
-        digitalWrite(STATUS_PIN, HIGH);
-        sendCode(lastBtnStateOfBtn3 == thirdButtonState);
-        digitalWrite(STATUS_PIN, LOW);
-        delay(50); // Wait a bit between retransmissions
-    }
-    else if (irrecv.decode(&results))
-    {
-        digitalWrite(STATUS_PIN, HIGH);
-        storeCode(&results);
-        irrecv.resume(); // resume receiver
-        digitalWrite(STATUS_PIN, LOW);
-    }
-    lastBtnStateOfBtn3 = thirdButtonState;
-//===========================================================    
-    
-    
-    
-    
-    
-    
+    // //Btn 3
+    // if (lastBtnStateOfBtn3 == HIGH && thirdButtonState == LOW)
+    // {
+    //     Serial.println("Released");
+    //     irrecv.enableIRIn(); // Re-enable receiver
+    // }
+
+    // if (thirdButtonState)
+    // {
+    //     Serial.println("Pressed, sending");
+    //     digitalWrite(STATUS_PIN, HIGH);
+    //     sendCode(lastBtnStateOfBtn3 == thirdButtonState);
+    //     digitalWrite(STATUS_PIN, LOW);
+    //     delay(50); // Wait a bit between retransmissions
+    // }
+    // else if (irrecv.decode(&results))
+    // {
+    //     digitalWrite(STATUS_PIN, HIGH);
+    //     storeCode(&results);
+    //     irrecv.resume(); // resume receiver
+    //     digitalWrite(STATUS_PIN, LOW);
+    // }
+    // lastBtnStateOfBtn3 = thirdButtonState;
+//===========================================================
+
+
+
+
+
+
 }
