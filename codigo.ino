@@ -30,10 +30,25 @@ IRsend irsend; //lembrar de por PWM 3 como o IR LED
 
 decode_results results;
 
+//Struct que guarda infos do botao, no caso sobre o codigo IR que ele deve reproduzir quando apertado
+typedef struct Button_Info{
+    int codeType;// -1 should be the default
+    int toggle;  //0 should be the default; The RC5/6 toggle state
+    unsigned long codeValue; // The code value if not raw
+    unsigned int rawCodes[RAWBUF]; // The durations if raw
+    int codeLen; // The length of the code
+} Button_Info;
+
 //=====================
 //VARIAVEIS GLOBAIS
 //=====================
-int ultimo_botao_press = FIRST_BUTTON_PIN; //por default o ultimo botao pressionado vai ser o primeiro
+int last_pressed_button = 0; //por default o ultimo botao pressionado vai ser o primeiro
+
+Button_Info button_one = { -1, 0 };// inicializando codeType =-1 e toggle=0;
+
+//lista dos botoes
+Button_Info buttons_list[1] = { button_one };
+
 //=====================
 //VARIAVEIS GLOBAIS - FIM
 //=====================
@@ -50,55 +65,57 @@ void setup()
 }
 
 // Storage for the recorded code
-int codeType = -1; // The type of code
-unsigned long codeValue; // The code value if not raw
-unsigned int rawCodes[RAWBUF]; // The durations if raw
-int codeLen; // The length of the code
-int toggle = 0; // The RC5/6 toggle state
+// int codeType = -1; // The type of code
+// unsigned long codeValue; // The code value if not raw
+// unsigned int rawCodes[RAWBUF]; // The durations if raw
+// int codeLen; // The length of the code
+// int toggle = 0; // The RC5/6 toggle state
+
 
 // Stores the code for later playback
 // Most of this code is just logging
-void storeCode(decode_results *results)
+void storeCode(decode_results *results, int pressed_button)
 {
-    codeType = results->decode_type;
+    buttons_list[pressed_button].codeType = results->decode_type;
     int count = results->rawlen;
-    if (codeType == UNKNOWN)
+    if (buttons_list[pressed_button].codeType == UNKNOWN)
     {
         Serial.println("Received unknown code, saving as raw");
-        codeLen = results->rawlen - 1;
+        buttons_list[pressed_button].codeLen = results->rawlen - 1;
         // To store raw codes:
         // Drop first value (gap)
         // Convert from ticks to microseconds
         // Tweak marks shorter, and spaces longer to cancel out IR receiver distortion
-        for (int i = 1; i <= codeLen; i++)
+        for (int i = 1; i <= buttons_list[pressed_button].codeLen; i++)
         {
             if (i % 2)
             {
                 // Mark
-                rawCodes[i - 1] = results->rawbuf[i] * USECPERTICK - MARK_EXCESS;
+                buttons_list[pressed_button].rawCodes[i - 1] = results->rawbuf[i] * USECPERTICK - MARK_EXCESS;
                 Serial.print(" m");
             }
             else
             {
                 // Space
-                rawCodes[i - 1] = results->rawbuf[i] * USECPERTICK + MARK_EXCESS;
+                buttons_list[pressed_button].rawCodes[i - 1] = results->rawbuf[i] * USECPERTICK + MARK_EXCESS;
                 Serial.print(" s");
             }
-            Serial.print(rawCodes[i - 1], DEC);
+            Serial.print(buttons_list[pressed_button].rawCodes[i - 1], DEC);
         }
         Serial.println("");
     }
     else
     {
-        VerifyTypeOfSignal(results, codeType);
+        VerifyTypeOfSignal(results, pressed_button);
         Serial.println(results->value, HEX);
-        codeValue = results->value;
-        codeLen = results->bits;
+        buttons_list[pressed_button].codeValue = results->value;
+        buttons_list[pressed_button].codeLen = results->bits;
     }
 }
-void VerifyTypeOfSignal(decode_results *results, int codeType)
+
+void VerifyTypeOfSignal(decode_results *results, int pressed_button)
 {
-    if (codeType == NEC)
+    if (buttons_list[pressed_button].codeType == NEC)
     {
         Serial.print("Received NEC: ");
         if (results->value == REPEAT)
@@ -108,95 +125,95 @@ void VerifyTypeOfSignal(decode_results *results, int codeType)
             return;
         }
     }
-    else if (codeType == SONY)
+    else if (buttons_list[pressed_button].codeType == SONY)
     {
         Serial.print("Received SONY: ");
     }
-    else if (codeType == RC5)
+    else if (buttons_list[pressed_button].codeType == RC5)
     {
         Serial.print("Received RC5: ");
     }
-    else if (codeType == RC6)
+    else if (buttons_list[pressed_button].codeType == RC6)
     {
         Serial.print("Received RC6: ");
     }
     else
     {
         Serial.print("Unexpected codeType ");
-        Serial.print(codeType, DEC);
+        Serial.print(buttons_list[pressed_button].codeType, DEC);
         Serial.println("");
     }
 }
 
-void sendCode(int repeat)
+void sendCode(int repeat, int pressed_button)
 {
-    if (codeType == NEC)
+    if (buttons_list[pressed_button].codeType == NEC)
     {
-        sendCodeNec(repeat);
+        sendCodeNec(repeat, pressed_button);
     }
-    else if (codeType == SONY)
+    else if (buttons_list[pressed_button].codeType == SONY)
     {
-        sendCodeSony();
+        sendCodeSony(pressed_button);
     }
-    else if (codeType == RC5 || codeType == RC6)
+    else if (buttons_list[pressed_button].codeType == RC5 || buttons_list[pressed_button].codeType == RC6)
     {
-        sendCodeRC5orRC6(repeat);
+        sendCodeRC5orRC6(repeat, pressed_button);
     }
-    else if (codeType == UNKNOWN /* i.e. raw */)
+    else if (buttons_list[pressed_button].codeType == UNKNOWN /* i.e. raw */)
     {
         // Assume 38 KHz
-        sendCodeUnknow();
+        sendCodeUnknow(pressed_button);
     }
 }
-void sendCodeNec(int repeat)
+void sendCodeNec(int repeat, int pressed_button)
 {
 
     if (repeat)
     {
-        irsend.sendNEC(REPEAT, codeLen);
+        irsend.sendNEC(REPEAT, buttons_list[pressed_button].codeLen);
         Serial.println("Sent NEC repeat");
     }
     else
     {
-        irsend.sendNEC(codeValue, codeLen);
+        irsend.sendNEC(buttons_list[pressed_button].codeType, buttons_list[pressed_button].codeLen);
         Serial.print("Sent NEC ");
-        Serial.println(codeValue, HEX);
+        Serial.println(buttons_list[pressed_button].codeType, HEX);
     }
 
 }
-void sendCodeSony()
+void sendCodeSony(int pressed_button)
 {
-    irsend.sendSony(codeValue, codeLen);
+    irsend.sendSony(buttons_list[pressed_button].codeType, buttons_list[pressed_button].codeLen);
     Serial.print("Sent Sony ");
-    Serial.println(codeValue, HEX);
+    Serial.println(buttons_list[pressed_button].codeType, HEX);
 }
-void sendCodeRC5orRC6(int repeat)
+void sendCodeRC5orRC6(int repeat, int pressed_button)
 {
     if (!repeat)
     {
         // Flip the toggle bit for a new button press
-        toggle = 1 - toggle;
+        buttons_list[pressed_button].toggle = 1 - buttons_list[pressed_button].toggle;
     }
     // Put the toggle bit into the code to send
-    codeValue = codeValue & ~(1 << (codeLen - 1));
-    codeValue = codeValue | (toggle << (codeLen - 1));
-    if (codeType == RC5)
+    buttons_list[pressed_button].codeValue = buttons_list[pressed_button].codeValue & ~(1 << (buttons_list[pressed_button].codeLen - 1));
+    buttons_list[pressed_button].codeValue = buttons_list[pressed_button].codeValue | (buttons_list[pressed_button].toggle << (buttons_list[pressed_button].codeLen - 1));
+    if (buttons_list[pressed_button].codeType == RC5)
     {
         Serial.print("Sent RC5 ");
-        Serial.println(codeValue, HEX);
-        irsend.sendRC5(codeValue, codeLen);
+        Serial.println(buttons_list[pressed_button].codeValue, HEX);
+        irsend.sendRC5(buttons_list[pressed_button].codeValue, buttons_list[pressed_button].codeLen);
     }
     else
     {
-        irsend.sendRC6(codeValue, codeLen);
+        irsend.sendRC6(buttons_list[pressed_button].codeValue, buttons_list[pressed_button].codeLen);
         Serial.print("Sent RC6 ");
-        Serial.println(codeValue, HEX);
+        Serial.println(buttons_list[pressed_button].codeValue, HEX);
     }
 }
 
-void sendCodeUnknow()
+void sendCodeUnknow(int pressed_button)
 {
-    irsend.sendRaw(rawCodes, codeLen, 38);
+    irsend.sendRaw(buttons_list[pressed_button].rawCodes, buttons_list[pressed_button].codeLen, 38);
     Serial.println("Sent raw");
 }
 
@@ -228,16 +245,17 @@ void loop()
 
     if (firstButtonState)
     {
+        last_pressed_button = 0; //marca o primeiro botao como sendo o pressionado
         Serial.println("Pressed, sending");
         digitalWrite(STATUS_PIN, HIGH);
-        sendCode(lastButtonState == firstButtonState);
+        sendCode(lastButtonState == firstButtonState, last_pressed_button);
         digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
     else if (irrecv.decode(&results))
     {
         digitalWrite(STATUS_PIN, HIGH);
-        storeCode(&results);
+        storeCode(&results, last_pressed_button);
         irrecv.resume(); // resume receiver
         digitalWrite(STATUS_PIN, LOW);
     }
