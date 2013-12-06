@@ -221,7 +221,25 @@ void sendCodeUnknow(int pressed_button)
 
 int lastButtonState; //@Lanchinho, seria isto aqui o ultimo estado do btn 1 ?
 
+void printDadosBotao(int pressed_button){
 
+    // int codeType;// -1 should be the default
+    // int toggle;  //0 should be the default; The RC5/6 toggle state
+    // unsigned long codeValue; // The code value if not raw
+    // unsigned int rawCodes[RAWBUF]; // The durations if raw
+    // int codeLen; // The length of the code
+
+    Serial.println("Dados Button");
+    Serial.println("codeType:");
+    Serial.println(buttons_list[pressed_button].codeType);
+    Serial.println("toggle:");
+    Serial.println(buttons_list[pressed_button].toggle);
+    Serial.println("codeValue:");
+    Serial.println(buttons_list[pressed_button].codeValue, HEX);
+    Serial.println("codeLen:");
+    Serial.println(buttons_list[pressed_button].codeLen);
+
+}
 //============================================================
 // int lastBtnStateOfBtn2;
 // int lastBtnStateOfBtn3;
@@ -254,6 +272,7 @@ void loop()
     }
     else if (irrecv.decode(&results))
     {
+        printDadosBotao(0);
         digitalWrite(STATUS_PIN, HIGH);
         storeCode(&results, last_pressed_button);
         irrecv.resume(); // resume receiver
