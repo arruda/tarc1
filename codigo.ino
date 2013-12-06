@@ -223,7 +223,7 @@ void loop()
     if (lastButtonState == HIGH && firstButtonState == LOW)
     {
         Serial.println("Released");
-        // irrecv.enableIRIn(); // Re-enable receiver
+        irrecv.enableIRIn(); // Re-enable receiver
     }
 
     if (firstButtonState)
@@ -234,13 +234,13 @@ void loop()
         digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
-    // else if (irrecv.decode(&results))
-    // {
-    //     digitalWrite(STATUS_PIN, HIGH);
-    //     storeCode(&results);
-    //     irrecv.resume(); // resume receiver
-    //     digitalWrite(STATUS_PIN, LOW);
-    // }
+    else if (irrecv.decode(&results))
+    {
+        digitalWrite(STATUS_PIN, HIGH);
+        storeCode(&results);
+        irrecv.resume(); // resume receiver
+        digitalWrite(STATUS_PIN, LOW);
+    }
     lastButtonState = firstButtonState;
 
 //==========================================================================
