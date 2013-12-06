@@ -175,17 +175,17 @@ void sendCodeNec(int repeat, int pressed_button)
     }
     else
     {
-        irsend.sendNEC(buttons_list[pressed_button].codeType, buttons_list[pressed_button].codeLen);
+        irsend.sendNEC(buttons_list[pressed_button].codeValue, buttons_list[pressed_button].codeLen);
         Serial.print("Sent NEC ");
-        Serial.println(buttons_list[pressed_button].codeType, HEX);
+        Serial.println(buttons_list[pressed_button].codeValue, HEX);
     }
 
 }
 void sendCodeSony(int pressed_button)
 {
-    irsend.sendSony(buttons_list[pressed_button].codeType, buttons_list[pressed_button].codeLen);
+    irsend.sendSony(buttons_list[pressed_button].codeValue, buttons_list[pressed_button].codeLen);
     Serial.print("Sent Sony ");
-    Serial.println(buttons_list[pressed_button].codeType, HEX);
+    Serial.println(buttons_list[pressed_button].codeValue, HEX);
 }
 void sendCodeRC5orRC6(int repeat, int pressed_button)
 {
