@@ -18,7 +18,7 @@
 #include <IRremote.h>
 
 int RECV_PIN = 11;
-int FIRST_BUTTON_PIN = 2;
+int FIRST_BUTTON_PIN = 12;
 //================================================================================================================================
 // int SECOND_BUTTON_PIN = 3; //@Lanchinho : nao necessariamente neste pino/ casa, pode ser qlqer outra que esteja livre
 // int THIRD_BUTTON_PIN = 4;  //@Lanchinho: Vou deixar todas as cagadas, digo alterações feitas por mim separadas por um "========="
@@ -206,8 +206,8 @@ int lastButtonState; //@Lanchinho, seria isto aqui o ultimo estado do btn 1 ?
 
 
 //============================================================
-int lastBtnStateOfBtn2;
-int lastBtnStateOfBtn3;
+// int lastBtnStateOfBtn2;
+// int lastBtnStateOfBtn3;
 //============================================================
 
 void loop()
@@ -223,24 +223,24 @@ void loop()
     if (lastButtonState == HIGH && firstButtonState == LOW)
     {
         Serial.println("Released");
-        irrecv.enableIRIn(); // Re-enable receiver
+        // irrecv.enableIRIn(); // Re-enable receiver
     }
 
     if (firstButtonState)
     {
         Serial.println("Pressed, sending");
         digitalWrite(STATUS_PIN, HIGH);
-        sendCode(lastButtonState == firstButtonState);
+        // sendCode(lastButtonState == firstButtonState);
         digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
-    else if (irrecv.decode(&results))
-    {
-        digitalWrite(STATUS_PIN, HIGH);
-        storeCode(&results);
-        irrecv.resume(); // resume receiver
-        digitalWrite(STATUS_PIN, LOW);
-    }
+    // else if (irrecv.decode(&results))
+    // {
+    //     digitalWrite(STATUS_PIN, HIGH);
+    //     storeCode(&results);
+    //     irrecv.resume(); // resume receiver
+    //     digitalWrite(STATUS_PIN, LOW);
+    // }
     lastButtonState = firstButtonState;
 
 //==========================================================================
