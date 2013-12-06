@@ -75,13 +75,13 @@ void storeCode(decode_results *results)
     }
     else
     {
-        VerifyTypeOfSignal(codeType);
+        VerifyTypeOfSignal(results, codeType);
         Serial.println(results->value, HEX);
         codeValue = results->value;
         codeLen = results->bits;
     }
 }
-void VerifyTypeOfSignal(int codeType)
+void VerifyTypeOfSignal(decode_results *results, int codeType)
 {
     if (codeType == NEC)
     {
