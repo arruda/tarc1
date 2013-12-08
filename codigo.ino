@@ -235,11 +235,6 @@ void printDadosBotao(int pressed_button){
     Serial.println(buttons_list[pressed_button].codeLen);
 
 }
-//============================================================
-// int lastButtonState;
-// int lastBtnStateOfBtn2;
-// int lastBtnStateOfBtn3;
-//============================================================
 
 int check_button_released(int button_index){
     return buttons_list[button_index].last_button_state == HIGH && buttons_list[button_index].button_state == LOW;
@@ -249,12 +244,28 @@ int check_button_pressed(int button_index){
     return buttons_list[button_index].button_state;
 }
 
-
+int what_button_index_was_pressed(){
+    for(int i=0; i < 2; i++){
+        if(check_button_pressed(i)){
+            return i;
+        }
+    }
+    return -1;
+}
+int what_button_index_was_released(){
+    for(int i=0; i < 2; i++){
+        if(check_button_released(i)){
+            return i;
+        }
+    }
+    return -1;
+}
 void re_enable_IRIn_if_button_released(){
-
-    if (check_button_released(0) | check_button_released(1))
+    int button_index = what_button_index_was_released();
+    if (button_index != -1)
     {
-        Serial.println("Released a button");
+        Serial.print("Released button");
+        Serial.println(button_index);
         irrecv.enableIRIn(); // Re-enable receiver
     }
     return;
@@ -269,30 +280,43 @@ void update_last_state_of_buttons(){
     buttons_list[1].last_button_state = buttons_list[1].button_state;
 }
 
+int check_button_pressed_and_sendCode(){
+    int button_index = what_button_index_was_pressed();
+    if (button_index != -1)
+    {
+        last_pressed_button = button_index; //marks the correct button_index as the last pressed
+        Serial.print("Pressed Button ");
+        Serial.print(last_pressed_button);
+        Serial.println(", sending");
+
+        digitalWrite(STATUS_PIN, HIGH);
+
+        int is_repeating = buttons_list[button_index].last_button_state == buttons_list[button_index].button_state;
+        sendCode(is_repeating, last_pressed_button);
+
+        digitalWrite(STATUS_PIN, LOW);
+
+        //return true
+        return 1;
+    }
+    //return false
+    return 0;
+}
+
 void loop()
 {
-    // If button pressed, send the code.
     update_state_of_buttons();
-    //========================================================
-
-    // int secondButtonState = digitalRead(SECOND_BUTTON_PIN);
-    // int thirdButtonState = digitalRead(THIRD_BUTTON_PIN);
-    //========================================================
 
     re_enable_IRIn_if_button_released();
 
-    if (check_button_pressed(0))
+    // If button pressed, send the code.
+    if (check_button_pressed_and_sendCode())
     {
-        last_pressed_button = 0; //marca o primeiro botao como sendo o pressionado
-        Serial.println("Pressed, sending");
-        digitalWrite(STATUS_PIN, HIGH);
-        sendCode(buttons_list[0].last_button_state == buttons_list[0].button_state, last_pressed_button);
-        digitalWrite(STATUS_PIN, LOW);
         delay(50); // Wait a bit between retransmissions
     }
     else if (irrecv.decode(&results))
     {
-        printDadosBotao(0);
+        printDadosBotao(last_pressed_button);
         digitalWrite(STATUS_PIN, HIGH);
         storeCode(&results, last_pressed_button);
         irrecv.resume(); // resume receiver
