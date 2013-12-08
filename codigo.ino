@@ -250,24 +250,36 @@ int check_button_pressed(int button_index){
 }
 
 
+void re_enable_IRIn_if_button_released(){
+
+    if (check_button_released(0) | check_button_released(1))
+    {
+        Serial.println("Released a button");
+        irrecv.enableIRIn(); // Re-enable receiver
+    }
+    return;
+}
+
+void update_state_of_buttons(){
+    buttons_list[0].button_state = digitalRead(FIRST_BUTTON_PIN);
+    buttons_list[1].button_state = digitalRead(SECOND_BUTTON_PIN);
+}
+void update_last_state_of_buttons(){
+    buttons_list[0].last_button_state = buttons_list[0].button_state;
+    buttons_list[1].last_button_state = buttons_list[1].button_state;
+}
 
 void loop()
 {
     // If button pressed, send the code.
-
+    update_state_of_buttons();
     //========================================================
-    buttons_list[0].button_state = digitalRead(FIRST_BUTTON_PIN);
-    buttons_list[1].button_state = digitalRead(SECOND_BUTTON_PIN);
 
     // int secondButtonState = digitalRead(SECOND_BUTTON_PIN);
     // int thirdButtonState = digitalRead(THIRD_BUTTON_PIN);
     //========================================================
 
-    if (check_button_released(0))
-    {
-        Serial.println("Released");
-        irrecv.enableIRIn(); // Re-enable receiver
-    }
+    re_enable_IRIn_if_button_released();
 
     if (check_button_pressed(0))
     {
@@ -286,7 +298,7 @@ void loop()
         irrecv.resume(); // resume receiver
         digitalWrite(STATUS_PIN, LOW);
     }
-    buttons_list[0].last_button_state = buttons_list[0].button_state;
 
+    update_last_state_of_buttons();
 
 }
